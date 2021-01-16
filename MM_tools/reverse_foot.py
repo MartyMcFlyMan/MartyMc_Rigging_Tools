@@ -41,7 +41,7 @@ def create_rfs(side, *args):
     cmds.parent(side + '_heel_RFS_grp', side + '_foot_RFS_grp')
 
     # place it under the foot controllers
-    cmds.parent(side + '_leg_ikHandle', side + '_foot_IK_ctl')
+    #cmds.parent(side + '_leg_ikHandle', side + '_foot_IK_ctl')
 
     # put the pole vector controllers under the IK foot controllers
     cmds.parent(side + '_legPV_offset', side + '_foot_IK_ctl')

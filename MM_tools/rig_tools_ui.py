@@ -4,19 +4,17 @@ import os
 from functools import partial
 import rig_utils
 import create_base_skel
-import fkik_leg_switch
-import ik_leg
+import fkik_leg_setup
 import reverse_foot
 import lock_ctls
-import fkik_arm_switch
+import fkik_arm_setup
 
 reload(rig_utils)
 reload(create_base_skel)
-reload(ik_leg)
 reload(reverse_foot)
-reload(fkik_leg_switch)
+reload(fkik_leg_setup)
 reload(lock_ctls)
-reload(fkik_arm_switch)
+reload(fkik_arm_setup)
 
 
 def ui():
@@ -99,26 +97,9 @@ def ui():
 
     # create mySKEL autorigger buttons
     cmds.button(label='Create Biped Skeleton', command=create_base_skel.create_skel, w=300)
-    cmds.button(label='Mirror Skeleton', command=create_base_skel.mirror_skel, w=300)
-    cmds.text(label='Use translation only on lowerBody_jnt\n'
-                    'Place the other joints using rotate and scale\n'
-                    'to keep the good joint orientations', align='left',
-              font='smallObliqueLabelFont')
-    cmds.button(label='Setup Both Legs', command=setup_both_legs, w=300)
-    cmds.button(label='Setup Both Arms', command=setup_both_arms, w=300)
-
-    cmds.rowColumnLayout(nr=1, p=tab_child3)
-    # get the side prefix with a text input field.
-    cmds.text(label='Input extra leg prefix here: ', font='boldLabelFont')
-    side_input = cmds.textField('side_input')
-
-    cmds.columnLayout(p=tab_child3)
-    cmds.button(label='Setup extra Leg',
-                command=lambda *args: setup_leg(cmds.textField(side_input, q=True, tx=True)), w=300)
-    cmds.text(label='input the prefix you gave the extra leg,\n'
-                    'ex. right leg prefix would be R, left leg would be L\n'
-                    '(R_leg_jnt, L_leg_jnt, X_leg_jnt)', align='left',
-              font='smallObliqueLabelFont')
+    cmds.button(label='Mirror skeleton', command=mirror_skel, w=300)
+    cmds.button(label='Setup Legs', command=setup_legs, w=300)
+    cmds.button(label='Setup Arms', command=setup_arms, w=300)
 
     cmds.tabLayout(tabs, edit=True, tabLabel=((tab_child1, 'Rigging Tools'),
                                               (tab_child2, 'Direct Connections'),
@@ -159,23 +140,22 @@ def connect_diff(*args):
     rig_utils.connect_different(parent_attr, child_attr)
 
 
-def setup_leg(side):
-    fkik_leg_switch.create_fkik_leg(side)
-    ik_leg.setup_ik_leg(side)
+def setup_leg(side, *args):
+    fkik_leg_setup.setup_fkik_leg(side)
     reverse_foot.create_rfs(side)
     lock_ctls.lock_leg_ctls(side)
 
 
-def setup_both_legs(*args):
-    setup_leg('L')
-    setup_leg('R')
+def setup_legs(*args):
+    prefix_list = detect_parts()[0]
+    for side in prefix_list:
+        setup_leg(side)
 
 
-def setup_both_arms(*args):
-    fkik_arm_switch.create_fkik_arm('L')
-    fkik_arm_switch.setup_ik_arm('L')
-    fkik_arm_switch.create_fkik_arm('R')
-    fkik_arm_switch.setup_ik_arm('R')
+def setup_arms(*args):
+    prefix_list = detect_parts()[1]
+    for side in prefix_list:
+        fkik_arm_setup.setup_fkik_arm(side)
 
 
 def update_size(*args):
@@ -183,7 +163,7 @@ def update_size(*args):
     cmds.jointDisplayScale(val, a=True)
 
 
-def detect_parts(*args):
+def list_prefix(*args):
     """Detect all joint prefixes to pass as side arguments to the autorigger"""
     # make a list from all joints
     jnt_list = cmds.ls(type='joint')
@@ -203,3 +183,63 @@ def detect_parts(*args):
                 prefix_list.append(new_prefix)
 
     return prefix_list
+
+
+def detect_parts(*args):
+
+    prefix_list = list_prefix()
+    legs_list = []
+    arms_list = []
+    feet_list = []
+    scap_list = []
+    hips_list = []
+
+    joints_list = cmds.ls(type='joint', l=False)
+
+    # detect arms, legs and feet for autorigging
+    for prefix in prefix_list:
+        print prefix
+        if cmds.objExists(prefix + '_hip_jnt|' + prefix + '_knee_jnt|' + prefix + '_ankle_jnt'):
+            legs_list.append(prefix)
+
+        if cmds.objExists(prefix + '_shoulder_jnt|' + prefix + '_elbow_jnt|' + prefix + '_wrist_jnt'):
+            arms_list.append(prefix)
+
+        if cmds.objExists(prefix + '_ankle_jnt|' + prefix + '_ball_jnt|' + prefix + '_toe_jnt')\
+                and cmds.objExists(prefix + '_ankle_jnt|' + prefix + '_heel_jnt'):
+            feet_list.append(prefix)
+
+    # detect scapulas and hips for mirroring
+    for x in joints_list:
+        name_list = x.split('|')
+        real_name = name_list[-1]
+
+        if 'scapula' in real_name:
+            scap_list.append(real_name)
+
+        if 'hip' in real_name:
+            hips_list.append(real_name)
+
+    return legs_list, arms_list, feet_list, scap_list, hips_list
+
+
+def mirror_skel(*args):
+    hips_list = detect_parts()[4]
+    scap_list = detect_parts()[3]
+
+    if hips_list:
+        for hip in hips_list:
+            # mirror right leg joints
+            cmds.mirrorJoint(hip, mirrorYZ=True, sr=('R', 'L'), mb=True)
+
+    if scap_list:
+        for scap in scap_list:
+            # mirror right scapula
+            cmds.mirrorJoint(scap, mirrorYZ=True, sr=('R', 'L'), mb=True)
+
+    # mirror right eye joints
+    cmds.mirrorJoint('R_eye_jnt', mirrorYZ=True, sr=('R', 'L'), mb=True)
+
+
+
+    cmds.select(d=True)

@@ -51,3 +51,6 @@ def setup_ik_leg(side, *args):
     # hide the FKIK joints (I only hide the top joint so the rest disappears with it)
     rig_utils.hide(side + '_hip_IK_jnt')
     rig_utils.hide(side + '_hip_FK_jnt')
+
+    # parent ikhandle under foot ctl
+    cmds.parent(side + '_leg_ikHandle', side + '_foot_IK_ctl')

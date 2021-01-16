@@ -126,20 +126,6 @@ def create_skel(*args):
     cmds.select(d=True)
 
 
-def mirror_skel(*args):
-
-    # mirror right scapula
-    cmds.mirrorJoint('R_scapula_jnt', mirrorYZ=True, sr=('R', 'L'), mb=True)
-
-    # mirror right eye joints
-    cmds.mirrorJoint('R_eye_jnt', mirrorYZ=True, sr=('R', 'L'), mb=True)
-
-    # mirror right leg joints
-    cmds.mirrorJoint('R_hip_jnt', mirrorYZ=True, sr=('R', 'L'), mb=True)
-
-    cmds.select(d=True)
-
-
 def orient_skel(side, *args):
 
     # orient joints lower body joints

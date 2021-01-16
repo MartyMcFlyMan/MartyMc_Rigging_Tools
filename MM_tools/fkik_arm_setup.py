@@ -6,7 +6,7 @@ import rig_utils
 reload(rig_utils)
 
 
-def create_fkik_arm(side, *args):
+def setup_fkik_arm(side, *args):
 
     # Part 1 : Verify required objects
     # make a list of all the required objects and verify they exist
@@ -206,11 +206,6 @@ def create_fkik_arm(side, *args):
                            dv=0, v=0)
     cmds.setDrivenKeyframe(side + '_shoulder_FK_ctl.v', cd=side + '_arm_FKIK_switch.FKIKSwitch',
                            dv=1, v=1)
-
-
-def setup_ik_arm(side, *args):
-
-    """Creates the IK arm and pole vector setup for mySKEL rigging setup tool"""
 
     # set preferred angle on shoulders
     cmds.joint(side + '_shoulder_jnt', e=True, spa=True)
