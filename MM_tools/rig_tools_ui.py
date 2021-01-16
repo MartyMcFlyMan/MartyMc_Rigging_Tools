@@ -187,45 +187,37 @@ def list_prefix(*args):
 
 def detect_parts(*args):
 
-    prefix_list = list_prefix()
-    legs_list = []
-    arms_list = []
-    feet_list = []
-    scap_list = []
+    parts_dict = {}
+    ankles_list = []
+    scaps_list = []
     hips_list = []
 
-    joints_list = cmds.ls(type='joint', l=False)
-
-    # detect arms, legs and feet for autorigging
-    for prefix in prefix_list:
-        print prefix
-        if cmds.objExists(prefix + '_hip_jnt|' + prefix + '_knee_jnt|' + prefix + '_ankle_jnt'):
-            legs_list.append(prefix)
-
-        if cmds.objExists(prefix + '_shoulder_jnt|' + prefix + '_elbow_jnt|' + prefix + '_wrist_jnt'):
-            arms_list.append(prefix)
-
-        if cmds.objExists(prefix + '_ankle_jnt|' + prefix + '_ball_jnt|' + prefix + '_toe_jnt')\
-                and cmds.objExists(prefix + '_ankle_jnt|' + prefix + '_heel_jnt'):
-            feet_list.append(prefix)
+    joints_list = cmds.ls(type='joint')
 
     # detect scapulas and hips for mirroring
-    for x in joints_list:
-        name_list = x.split('|')
-        real_name = name_list[-1]
+    for long_name in joints_list:
+        name_list = long_name.split('|')
+        short_name = name_list[-1]
 
-        if 'scapula' in real_name:
-            scap_list.append(real_name)
+        if 'scapula' in short_name:
+            scaps_list.append(long_name)
 
-        if 'hip' in real_name:
-            hips_list.append(real_name)
+        if 'hip' in short_name:
+            hips_list.append(long_name)
 
-    return legs_list, arms_list, feet_list, scap_list, hips_list
+        if 'ankle' in short_name:
+            ankles_list.append(long_name)
+
+    parts_dict['ankles_list'] = ankles_list
+    parts_dict['scaps_list'] = scaps_list
+    parts_dict['hips_list'] = hips_list
+
+    return parts_dict
 
 
 def mirror_skel(*args):
-    hips_list = detect_parts()[4]
-    scap_list = detect_parts()[3]
+    hips_list = detect_parts().get('hips_list')
+    scap_list = detect_parts().get('scaps_list')
 
     if hips_list:
         for hip in hips_list:
@@ -240,6 +232,69 @@ def mirror_skel(*args):
     # mirror right eye joints
     cmds.mirrorJoint('R_eye_jnt', mirrorYZ=True, sr=('R', 'L'), mb=True)
 
-
-
     cmds.select(d=True)
+
+
+def detect_legs(*args):
+    """Detect hip joints, and find their knee and ankle joint names, creates a list of dicts"""
+    hips_list = detect_parts().get('hips_list')
+    legs_list = []
+    for hip in hips_list:
+        leg_parts = {}
+        knee = cmds.listRelatives(hip, c=True, pa=True)
+        ankle = cmds.listRelatives(knee, c=True, pa=True)
+        leg_parts['hip_name'] = hip
+        leg_parts['knee_name'] = knee
+        leg_parts['ankle_name'] = ankle
+        legs_list.append(leg_parts)
+
+    return legs_list
+
+
+def detect_arms(*args):
+    """Detect scapula joints, and find their shoulder, elbow and wrist joint names. Creates a list of dicts"""
+    scaps_list = detect_parts().get('scaps_list')
+    arms_list = []
+    for scap in scaps_list:
+        arm_parts = {}
+        shoulder = cmds.listRelatives(scap, c=True, pa=True)
+        elbow = cmds.listRelatives(shoulder, c=True, pa=True)
+        wrist = cmds.listRelatives(elbow, c=True, pa=True)
+        arm_parts['shoulder_name'] = shoulder
+        arm_parts['elbow_name'] = elbow
+        arm_parts['wrist_name'] = wrist
+        arms_list.append(arm_parts)
+
+    return arms_list
+
+
+def detect_feet(*args):
+    """Detect ankle joints, finds their ball, toe and heel joints. Creates a list of dicts"""
+    ankles_list = detect_parts().get('ankles_list')
+    feet_list = []
+    for ankle in ankles_list:
+        arm_parts = {}
+        heel = None
+        ball = None
+        for jnt in cmds.listRelatives(ankle, c=True, pa=True):
+            if 'heel' in jnt:
+                heel = jnt
+            if 'ball' in jnt:
+                ball = jnt
+
+        toe = cmds.listRelatives(ball, c=True, pa=True)
+
+        arm_parts['ankle_name'] = ankle
+        arm_parts['ball_name'] = ball
+        arm_parts['heel_name'] = heel
+        arm_parts['toe_name'] = toe
+        feet_list.append(arm_parts)
+
+    return feet_list
+
+
+
+
+
+
+
