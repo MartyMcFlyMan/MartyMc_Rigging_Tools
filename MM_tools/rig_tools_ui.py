@@ -152,12 +152,7 @@ def setup_legs(*args):
         setup_leg(side)
 
 
-def setup_arms(*args):
-    prefix_list = detect_parts()[1]
-    for side in prefix_list:
-        fkik_arm_setup.setup_fkik_arm(side)
-
-
+# joint display size update
 def update_size(*args):
     val = cmds.floatSliderGrp('size_slider', q=True, v=True)
     cmds.jointDisplayScale(val, a=True)
@@ -256,16 +251,31 @@ def detect_arms(*args):
     scaps_list = detect_parts().get('scaps_list')
     arms_list = []
     for scap in scaps_list:
-        arm_parts = {}
-        shoulder = cmds.listRelatives(scap, c=True, pa=True)
-        elbow = cmds.listRelatives(shoulder, c=True, pa=True)
-        wrist = cmds.listRelatives(elbow, c=True, pa=True)
-        arm_parts['shoulder_name'] = shoulder
-        arm_parts['elbow_name'] = elbow
-        arm_parts['wrist_name'] = wrist
-        arms_list.append(arm_parts)
+        for shoulder in cmds.listRelatives(scap, c=True, pa=True):
+            arm_parts = {}
+            elbow = cmds.listRelatives(shoulder, c=True, pa=True)
+            wrist = cmds.listRelatives(elbow, c=True, pa=True)
+            arm_parts['shoulder_name'] = ''.join(shoulder)
+            arm_parts['elbow_name'] = ''.join(elbow)
+            arm_parts['wrist_name'] = ''.join(wrist)
+            arms_list.append(arm_parts)
 
     return arms_list
+
+
+def setup_arms(*args):
+    arms_list = detect_arms()
+    print arms_list
+    for arm_parts in arms_list:
+        shoulder = arm_parts.get('shoulder_name')
+        elbow = arm_parts.get('elbow_name')
+        wrist = arm_parts.get('wrist_name')
+
+        if shoulder is None or elbow is None or wrist is None:
+            continue
+        else:
+            fkik_arm_setup.setup_fkik_arm(shoulder, elbow, wrist)
+    print shoulder, elbow, wrist
 
 
 def detect_feet(*args):

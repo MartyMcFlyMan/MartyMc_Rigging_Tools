@@ -48,7 +48,14 @@ def create_fk_ctls(*args):
     jnt_list = []  # make a list for all the processed joints
     ctl_list = []  # make a list for all the created controls
 
+    def get_short_name(jnt):
+        full_name_list = jnt.split('|')
+        short_name = full_name_list[-1]
+        return short_name
+
     for jnt in selected:
+
+        short_name = get_short_name(jnt)
 
         # verify if the jnt were given the _jnt suffix, and if they have, then remove it and give it a nice name
         nice_name = jnt
@@ -245,3 +252,4 @@ def hide_local_axis(*args):
     jnt_list = cmds.ls(type='joint')
     for jnt in jnt_list:
         cmds.setAttr(jnt + '.displayLocalAxis', False)
+

@@ -6,29 +6,47 @@ import rig_utils
 reload(rig_utils)
 
 
-def setup_fkik_arm(shoulder = None, elbow = None, wrist = None, *args):
+def setup_fkik_arm(side, *args):
+
+    # Part 1 : Verify required objects
+    # make a list of all the required objects and verify they exist
+    required_objects = [
+        '_shoulder_jnt',
+        '_elbow_jnt',
+        '_wrist_jnt',
+    ]
+    # make cancel switch to abort the script if an object is missing
+    missing_object = False
+
+    # make an empty list of missing objects
+    missing_list = []
+
+    for item in required_objects:
+        if cmds.objExists(side + item):
+            continue
+        else:
+            missing_object = True
+            missing_list.append(item)
+
+    if missing_object:
+        print 'The scene must contain the following objects:\n' \
+            'A joint chain containing the following: shoulder, elbow, wrist\n' \
+            'You do not have all the required items\n' \
+            'The following objects are missing: {}\n'.format(missing_list)
+        sys.exit('Missing objects: {}\n'.format(missing_list))
+
+    else:
+        print 'all required objects confirmed\n'
+
+    # From here, if the code still runs, it means we have all we need to proceed
 
     if cmds.objExists('scale_ctl'):
         cmds.parent('COG_jnt', w=True)
         cmds.delete('scale_ctl')
 
     # freeze all the joints'  to remove rotation info and scale info
-    cmds.makeIdentity(shoulder, a=True, r=True, s=True)
-    cmds.makeIdentity(elbow, a=True, r=True, s=True)
-    cmds.makeIdentity(wrist, a=True, r=True, s=True)
-
-    # get joints side prefix (it is the first character of the joint strings_
-    side = shoulder[-1]
-
-    # get middle part of joints name
-    def get_middle(jnt):
-        full_name_list = jnt.split('|')
-        short_name_list = full_name_list[-1].split('_')
-        middle_name = short_name_list[-2]
-        return middle_name
-
-    shoulder_mid = get_middle(shoulder)
-    arm_name = side + shoulder_mid.replace('shoulder', 'arm')
+    for item in required_objects:
+        cmds.makeIdentity(side + item, a=True, r=True, s=True)
 
     # Part 2 : Make the IK/FK setup and switch
     # create FKIK switch not too far from the shoulder joint (3 units)
@@ -37,11 +55,11 @@ def setup_fkik_arm(shoulder = None, elbow = None, wrist = None, *args):
     switch_offset_z = -3
 
     # define on which side of the body we are
-    axis = cmds.xform(wrist, q=True, t=True, ws=True)
+    axis = cmds.xform(side + '_wrist_jnt', q=True, t=True, ws=True)
     if axis[0] > 0:
         switch_offset_x = -switch_offset_x
 
-    shoulder_pos = cmds.xform(shoulder, q=True, t=True, ws=True)
+    shoulder_pos = cmds.xform(side + '_shoulder_jnt', q=True, t=True, ws=True)
 
     fkik_loc = cmds.spaceLocator(n=side + '_arm_FKIK_switch', p=shoulder_pos, a=True)
     cmds.xform(fkik_loc, cp=True)
@@ -52,8 +70,8 @@ def setup_fkik_arm(shoulder = None, elbow = None, wrist = None, *args):
 
     # create IK hand controllers
     # get wrist joint position and orientation
-    wrist_pos = tuple(cmds.xform(wrist, q=True, t=True, ws=True))
-    wrist_rot = tuple(cmds.xform(wrist, q=True, ro=True, ws=True))
+    wrist_pos = tuple(cmds.xform(side + '_wrist_jnt', q=True, t=True, ws=True))
+    wrist_rot = tuple(cmds.xform(side + '_wrist_jnt', q=True, ro=True, ws=True))
 
     cmds.circle(n=side + '_hand_IK_ctl', ch=False, d=1, s=3)
     cmds.xform(side + '_hand_IK_ctl', ro=(0, 90, 0))
@@ -64,30 +82,30 @@ def setup_fkik_arm(shoulder = None, elbow = None, wrist = None, *args):
     rig_utils.colour_red(side + '_hand_IK_ctl')
 
     # Duplicate the arm joints twice (for IK and FK)
-    cmds.duplicate(shoulder)
-    cmds.duplicate(shoulder)
+    cmds.duplicate(side + '_shoulder_jnt')
+    cmds.duplicate(side + '_shoulder_jnt')
 
     # Rename the joints chains for IK and FK
     # FK
-    shoulder_fk = cmds.rename(shoulder + '1', shoulder[:-4] + '_FK_jnt')
-    elbow_fk = cmds.rename(shoulder_fk + '|' + elbow, elbow[:-4] + '_FK_jnt')
-    wrist_fk = cmds.rename(elbow_fk + '|' + wrist, wrist[:-4] + '_FK_jnt')
+    cmds.rename(side + '_shoulder_jnt1', side + '_shoulder_FK_jnt')
+    cmds.rename(side + '_shoulder_FK_jnt|' + side + '_elbow_jnt', side + '_elbow_FK_jnt')
+    cmds.rename(side + '_elbow_FK_jnt|' + side + '_wrist_jnt', side + '_wrist_FK_jnt')
 
     # IK
-    shoulder_ik = cmds.rename(shoulder + '2', shoulder[:-4] + '_IK_jnt')
-    elbow_ik = cmds.rename(shoulder_ik + '|' + elbow, elbow[:-4] + '_IK_jnt')
-    wrist_ik = cmds.rename(elbow_ik + '|' + wrist, wrist[:-4] + '_IK_jnt')
+    cmds.rename(side + '_shoulder_jnt2', side + '_shoulder_IK_jnt')
+    cmds.rename(side + '_shoulder_IK_jnt|' + side + '_elbow_jnt', side + '_elbow_IK_jnt')
+    cmds.rename(side + '_elbow_IK_jnt|' + side + '_wrist_jnt', side + '_wrist_IK_jnt')
 
     # constrain all the FK and IK joints to their respective skinning joint
     # IK
-    cmds.parentConstraint(shoulder_ik, shoulder)
-    cmds.parentConstraint(elbow_ik, elbow)
-    cmds.parentConstraint(wrist_ik, wrist)
+    cmds.parentConstraint(side + '_shoulder_IK_jnt', side + '_shoulder_jnt')
+    cmds.parentConstraint(side + '_elbow_IK_jnt', side + '_elbow_jnt')
+    cmds.parentConstraint(side + '_wrist_IK_jnt', side + '_wrist_jnt')
 
     # FK
-    cmds.parentConstraint(shoulder_fk, shoulder)
-    cmds.parentConstraint(elbow_fk, elbow)
-    cmds.parentConstraint(wrist_fk, wrist)
+    cmds.parentConstraint(side + '_shoulder_FK_jnt', side + '_shoulder_jnt')
+    cmds.parentConstraint(side + '_elbow_FK_jnt', side + '_elbow_jnt')
+    cmds.parentConstraint(side + '_wrist_FK_jnt', side + '_wrist_jnt')
 
     # set all the constraints' interpolation type to 'shortest'
     cmds.setAttr(side + '_shoulder_jnt_parentConstraint1' + '.interpType', 2)
@@ -103,34 +121,37 @@ def setup_fkik_arm(shoulder = None, elbow = None, wrist = None, *args):
     def create_fk_ctl(part):
         """create standard FK controller on location"""
 
+        # get jnt name
+        jnt_name = side + '_' + part + '_FK_jnt'
+
         # get jnt coordinates
         part_pos = tuple(cmds.xform(jnt_name, q=True, t=True, ws=True))
         part_rot = tuple(cmds.xform(jnt_name, q=True, ro=True, ws=True))
 
         # create ctl
-        ctl_name = cmds.circle(n=jnt_name[:-4] + '_ctl', ch=False)[0]
+        ctl_name = cmds.circle(n=side + '_' + part + '_FK_ctl', ch=False)[0]
         cmds.xform(ctl_name, a=True, ro=(0, 90, 0))
         cmds.makeIdentity(ctl_name, t=True, r=True, s=True, a=True)
 
         # create offsetGrp
-        grp_name = cmds.group(ctl_name, n=jnt_name[:-4] '_offset')
+        grp_name = cmds.group(ctl_name, n=side + '_' + part + '_FK_offset')
         cmds.xform(grp_name, ro=part_rot, t=part_pos, a=True)
 
         # constrain ctl to jnt
         cmds.parentConstraint(ctl_name, jnt_name, mo=False)
 
-    create_fk_ctl(shoulder_fk)
-    create_fk_ctl(elbow_fk)
-    create_fk_ctl(wrist_fk)
+    create_fk_ctl('shoulder')
+    create_fk_ctl('elbow')
+    create_fk_ctl('wrist')
 
     # make FK controller hierarchy
-    cmds.parent(wrist_fk + '_offset', elbow_fk + '_ctl')
-    cmds.parent(elbow_fk + '_offset', shoulder_fk + '_ctl')
+    cmds.parent(side + '_wrist_FK_offset', side + '_elbow_FK_ctl')
+    cmds.parent(side + '_elbow_FK_offset', side + '_shoulder_FK_ctl')
 
     # lets colors the new controllers Blue
-    rig_utils.colour_blue(shoulder_fk + '_ctl')
-    rig_utils.colour_blue(elbow_fk + '_ctl')
-    rig_utils.colour_blue(wrist_fk + '_ctl')
+    rig_utils.colour_blue(side + '_shoulder_FK_ctl')
+    rig_utils.colour_blue(side + '_elbow_FK_ctl')
+    rig_utils.colour_blue(side + '_wrist_FK_ctl')
 
     # Now we need to hook up the FKIK switch to the constraints and controllers visibility using driven keys
 
@@ -187,7 +208,7 @@ def setup_fkik_arm(shoulder = None, elbow = None, wrist = None, *args):
                            dv=1, v=1)
 
     # set preferred angle on shoulders
-    cmds.joint(shoulder, e=True, spa=True)
+    cmds.joint(side + '_shoulder_jnt', e=True, spa=True)
 
     # create IK handle on right arm
     ik_name = cmds.ikHandle(n=side + '_arm_ikHandle', sj=side + '_shoulder_IK_jnt',
@@ -200,8 +221,8 @@ def setup_fkik_arm(shoulder = None, elbow = None, wrist = None, *args):
 
     # Now we need pole vectors
     # first we will need the location of the elbow joints and their orientations
-    elbow_pos = cmds.xform(elbow, t=True, ws=True, q=True)
-    elbow_orient = cmds.xform(elbow, ro=True, ws=True, q=True)
+    elbow_pos = cmds.xform(side + '_elbow_jnt', t=True, ws=True, q=True)
+    elbow_orient = cmds.xform(side + '_elbow_jnt', ro=True, ws=True, q=True)
 
     # we create the pole vector controllers, we place them using the elbow joints' orientations
     pv_ctl = cmds.circle(n=side + '_armPV_ctl', d=1, s=3, ch=False)
@@ -212,7 +233,7 @@ def setup_fkik_arm(shoulder = None, elbow = None, wrist = None, *args):
     cmds.xform(side + '_armPV_offset', t=tuple(elbow_pos), ro=tuple(elbow_orient))
     cmds.xform(side + '_armPV_offset', t=(0, 2.5, 0), r=True, os=True)
 
-    axis = cmds.xform(wrist, q=True, t=True, ws=True)
+    axis = cmds.xform(side + '_wrist_jnt', q=True, t=True, ws=True)
     if axis[0] > 0:
         cmds.xform(side + '_armPV_offset', t=(0, -5, 0), r=True, os=True)
 
