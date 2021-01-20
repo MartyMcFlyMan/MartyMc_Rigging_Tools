@@ -218,7 +218,7 @@ def setup_fkik_arm(shoulder = None, elbow = None, wrist = None, *args):
     elbow_orient = cmds.xform(elbow, ro=True, ws=True, q=True)
 
     # we create the pole vector controllers, we place them using the elbow joints' orientations
-    pv_ctl = cmds.circle(n=arm_name + 'PV_ctl', d=1, s=3, ch=False)
+    pv_ctl = cmds.circle(n=arm_name + 'PV_ctl', d=1, s=4, ch=False)
     cmds.xform(pv_ctl[0], s=(0.5, 0.5, 0.5))
     cmds.makeIdentity(pv_ctl[0], a=True, t=True, r=True, s=True)
 
@@ -230,7 +230,7 @@ def setup_fkik_arm(shoulder = None, elbow = None, wrist = None, *args):
     if axis[0] > 0:
         cmds.xform(arm_name + 'PV_offset', t=(0, -5, 0), r=True, os=True)
 
-    # reset armPV offset group rotations so the conrollers sit nicely in place with world axis
+    # reset armPV offset group rotations so the controllers sit nicely in place with world axis
     cmds.xform(arm_name + 'PV_offset', ro=(0, 0, 0))
 
     # color the armPV controllers

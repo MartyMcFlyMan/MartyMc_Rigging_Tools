@@ -20,11 +20,11 @@ reload(fkik_arm_setup)
 def ui():
 
     # check if window exists, if it does, then delete it and create a new one to avoid multiple windows.
-    if cmds.window('my_rigging_tools', exists=True):
-        cmds.deleteUI('my_rigging_tools')
+    if cmds.window('MM_rigging_tools', exists=True):
+        cmds.deleteUI('MM_rigging_tools')
 
     # Create a window
-    window = cmds.window('my_rigging_tools',  title="My Rigging Tools", w=300, h=250, mxb=False, mnb=False)
+    window = cmds.window('MM_rigging_tools',  title="MM Rigging Tools", w=300, h=250, mxb=False, mnb=False)
 
     # setup tabs
     tabs = cmds.tabLayout()
