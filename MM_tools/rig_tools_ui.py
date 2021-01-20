@@ -140,17 +140,18 @@ def connect_diff(*args):
     rig_utils.connect_different(parent_attr, child_attr)
 
 
-def setup_leg(side, *args):
-    fkik_leg_setup.setup_fkik_leg(side)
-    reverse_foot.create_rfs(side)
-    lock_ctls.lock_leg_ctls(side)
+def setup_legs(side, *args):
+    legs_list = detect_legs()
+    print legs_list
+    for leg_parts in legs_list:
+        hip = leg_parts.get('hip_name')
+        knee = leg_parts.get('knee_name')
+        ankle = leg_parts.get('ankle_name')
 
-
-def setup_legs(*args):
-    prefix_list = detect_parts()[0]
-    for side in prefix_list:
-        setup_leg(side)
-
+        if hip is None or knee is None or ankle is None:
+            continue
+        else:
+            fkik_leg_setup.setup_fkik_leg(hip, knee, ankle)
 
 # joint display size update
 def update_size(*args):
@@ -238,9 +239,9 @@ def detect_legs(*args):
         leg_parts = {}
         knee = cmds.listRelatives(hip, c=True, pa=True)
         ankle = cmds.listRelatives(knee, c=True, pa=True)
-        leg_parts['hip_name'] = hip
-        leg_parts['knee_name'] = knee
-        leg_parts['ankle_name'] = ankle
+        leg_parts['hip_name'] = ''.join(hip)
+        leg_parts['knee_name'] = ''.join(knee)
+        leg_parts['ankle_name'] = ''.join(ankle)
         legs_list.append(leg_parts)
 
     return legs_list
@@ -275,7 +276,6 @@ def setup_arms(*args):
             continue
         else:
             fkik_arm_setup.setup_fkik_arm(shoulder, elbow, wrist)
-    print shoulder, elbow, wrist
 
 
 def detect_feet(*args):
