@@ -253,3 +253,33 @@ def hide_local_axis(*args):
     for jnt in jnt_list:
         cmds.setAttr(jnt + '.displayLocalAxis', False)
 
+
+def append_positional(mystring, pos, suffix=True, *args):
+    pos -= 1
+    sel = cmds.ls(sl=True)
+
+    if suffix:
+        for x in sel:
+            name_list = x.split('_')
+            name_list[pos] += mystring
+            new_name = '_'.join(name_list)
+            cmds.rename(x, new_name)
+    else:
+        for x in sel:
+            name_list = x.split('_')
+            name_list[pos] = mystring + name_list[pos]
+            new_name = '_'.join(name_list)
+            cmds.rename(x, new_name)
+
+
+def remove_positional(remove, pos, *args):
+    pos -= 1
+    sel = cmds.ls(sl=True)
+
+    for x in sel:
+        name_list = x.split('_')
+        name_list[pos] = name_list[pos].replace(remove, '')
+        new_name = '_'.join(name_list)
+        cmds.rename(x, new_name)
+
+
