@@ -6,7 +6,7 @@ import rig_utils
 reload(rig_utils)
 
 
-def setup_fkik_arm(shoulder = None, elbow = None, wrist = None, *args):
+def setup_fkik_arm(shoulder=None, elbow=None, wrist=None, *args):
 
     if cmds.objExists('scale_ctl'):
         cmds.parent('COG_jnt', w=True)
@@ -132,72 +132,75 @@ def setup_fkik_arm(shoulder = None, elbow = None, wrist = None, *args):
 
         # constrain ctl to jnt
         cmds.parentConstraint(ctl_name, jnt_name, mo=False)
+        return ctl_name, grp_name
 
-    create_fk_ctl(shoulder_fk)
-    create_fk_ctl(elbow_fk)
-    create_fk_ctl(wrist_fk)
+    shoulder_fk_ctl, shoulder_fk_offset = create_fk_ctl(shoulder_fk)
+    elbow_fk_ctl, elbow_fk_offset = create_fk_ctl(elbow_fk)
+    wrist_fk_ctl, wrist_fk_offset = create_fk_ctl(wrist_fk)
 
     # make FK controller hierarchy
-    cmds.parent(wrist_fk[:-4] + '_offset', elbow_fk[:-4] + '_ctl')
-    cmds.parent(elbow_fk[:-4] + '_offset', shoulder_fk[:-4] + '_ctl')
+    cmds.parent(wrist_fk_offset, elbow_fk_ctl)
+    cmds.parent(elbow_fk_offset, shoulder_fk_ctl)
 
     # lets colors the new controllers Blue
-    rig_utils.colour_blue(shoulder_fk[:-4] + '_ctl')
-    rig_utils.colour_blue(elbow_fk[:-4] + '_ctl')
-    rig_utils.colour_blue(wrist_fk[:-4] + '_ctl')
+    rig_utils.colour_blue(shoulder_fk_ctl)
+    rig_utils.colour_blue(elbow_fk_ctl)
+    rig_utils.colour_blue(wrist_fk_ctl)
 
     # Now we need to hook up the FKIK switch to the constraints and controllers visibility using driven keys
 
+    fkik_switch = fkik_loc + '.FKIKSwitch'
+
     cmds.setDrivenKeyframe(shoulder_cst + '.' + shoulder_fk + 'W1',
-                           cd=fkik_loc + '.FKIKSwitch', dv=0, v=0)
+                           cd=fkik_switch, dv=0, v=0)
     cmds.setDrivenKeyframe(shoulder_cst + '.' + shoulder_fk + 'W1',
-                           cd=fkik_loc + '.FKIKSwitch', dv=1, v=1)
+                           cd=fkik_switch, dv=1, v=1)
 
     cmds.setDrivenKeyframe(shoulder_cst + '.' + shoulder_ik + 'W0',
-                           cd=fkik_loc + '.FKIKSwitch', dv=0, v=1)
+                           cd=fkik_switch, dv=0, v=1)
     cmds.setDrivenKeyframe(shoulder_cst + '.' + shoulder_ik + 'W0',
-                           cd=fkik_loc + '.FKIKSwitch', dv=1, v=0)
+                           cd=fkik_switch, dv=1, v=0)
 
     cmds.setDrivenKeyframe(elbow_cst + '.' + elbow_fk + 'W1',
-                           cd=fkik_loc + '.FKIKSwitch', dv=0, v=0)
+                           cd=fkik_switch, dv=0, v=0)
     cmds.setDrivenKeyframe(elbow_cst + '.' + elbow_fk + 'W1',
-                           cd=fkik_loc + '.FKIKSwitch', dv=1, v=1)
+                           cd=fkik_switch, dv=1, v=1)
 
     cmds.setDrivenKeyframe(elbow_cst + '.' + elbow_ik + 'W0',
-                           cd=fkik_loc + '.FKIKSwitch', dv=0, v=1)
+                           cd=fkik_switch, dv=0, v=1)
     cmds.setDrivenKeyframe(elbow_cst + '.' + elbow_ik + 'W0',
-                           cd=fkik_loc + '.FKIKSwitch', dv=1, v=0)
+                           cd=fkik_switch, dv=1, v=0)
 
     cmds.setDrivenKeyframe(wrist_cst + '.' + wrist_fk + 'W1',
-                           cd=fkik_loc + '.FKIKSwitch', dv=0, v=0)
+                           cd=fkik_switch, dv=0, v=0)
     cmds.setDrivenKeyframe(wrist_cst + '.' + wrist_fk + 'W1',
-                           cd=fkik_loc + '.FKIKSwitch', dv=1, v=1)
+                           cd=fkik_switch, dv=1, v=1)
 
     cmds.setDrivenKeyframe(wrist_cst + '.' + wrist_ik + 'W0',
-                           cd=fkik_loc + '.FKIKSwitch', dv=0, v=1)
+                           cd=fkik_switch, dv=0, v=1)
     cmds.setDrivenKeyframe(wrist_cst + '.' + wrist_ik + 'W0',
-                           cd=fkik_loc + '.FKIKSwitch', dv=1, v=0)
+                           cd=fkik_switch, dv=1, v=0)
 
     # IK controller
-    cmds.setDrivenKeyframe(hand_name + '_IK_ctl.v', cd=fkik_loc + '.FKIKSwitch',
+    cmds.setDrivenKeyframe(hand_name + '_IK_ctl.v', cd=fkik_switch,
                            dv=0, v=1)
-    cmds.setDrivenKeyframe(hand_name + '_IK_ctl.v', cd=fkik_loc + '.FKIKSwitch',
+    cmds.setDrivenKeyframe(hand_name + '_IK_ctl.v', cd=fkik_switch,
                            dv=1, v=0)
 
     # FK controllers
-    cmds.setDrivenKeyframe(wrist_fk[:-4] + '_ctl.v', cd=fkik_loc + '.FKIKSwitch',
+    cmds.setDrivenKeyframe(wrist_fk[:-4] + '_ctl.v', cd=fkik_switch,
                            dv=0, v=0)
-    cmds.setDrivenKeyframe(wrist_fk[:-4] + '_ctl.v', cd=fkik_loc + '.FKIKSwitch',
+    cmds.setDrivenKeyframe(wrist_fk[:-4] + '_ctl.v', cd=fkik_switch,
                            dv=1, v=1)
 
-    cmds.setDrivenKeyframe(elbow_fk[:-4] + '_ctl.v', cd=fkik_loc + '.FKIKSwitch',
+    cmds.setDrivenKeyframe(elbow_fk[:-4] + '_ctl.v', cd=fkik_switch,
                            dv=0, v=0)
-    cmds.setDrivenKeyframe(elbow_fk[:-4] + '_ctl.v', cd=fkik_loc + '.FKIKSwitch',
+    cmds.setDrivenKeyframe(elbow_fk[:-4] + '_ctl.v', cd=fkik_switch,
                            dv=1, v=1)
 
-    cmds.setDrivenKeyframe(shoulder_fk[:-4] + '_ctl.v', cd=fkik_loc + '.FKIKSwitch',
+    cmds.setDrivenKeyframe(shoulder_fk[:-4] + '_ctl.v', cd=fkik_switch,
                            dv=0, v=0)
-    cmds.setDrivenKeyframe(shoulder_fk[:-4] + '_ctl.v', cd=fkik_loc + '.FKIKSwitch',
+    cmds.setDrivenKeyframe(shoulder_fk[:-4] + '_ctl.v', cd=fkik_switch,
                            dv=1, v=1)
 
     # set preferred angle on shoulders
