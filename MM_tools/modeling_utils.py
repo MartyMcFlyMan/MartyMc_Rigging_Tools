@@ -67,6 +67,7 @@ def ui(*args):
     cmds.setParent('..')
     cmds.showWindow(window)
 
+
 def _select_rand(*args):
     thresh_val = cmds.floatSliderGrp('Threshold_slider', q=True, v=True)
     seed_val = cmds.floatSliderGrp('Seed_slider', q=True, v=True)
