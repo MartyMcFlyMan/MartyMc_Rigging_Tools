@@ -8,6 +8,7 @@ import fkik_leg_setup
 import reverse_foot
 import lock_ctls
 import fkik_arm_setup
+import simple_fk_autorig as sfa
 
 reload(rig_utils)
 reload(create_base_skel)
@@ -15,6 +16,7 @@ reload(reverse_foot)
 reload(fkik_leg_setup)
 reload(lock_ctls)
 reload(fkik_arm_setup)
+reload(sfa)
 
 
 def ui():
@@ -96,6 +98,8 @@ def ui():
     cmds.image(w=300, h=100, image=image_path3)
 
     # create mySKEL autorigger buttons
+    cmds.button(label='Fast FK rig', command=fast_fk_rig, w=300)
+    cmds.separator(h=20)
     cmds.button(label='Create Biped Skeleton', command=create_base_skel.create_skel, w=300)
     cmds.button(label='Mirror skeleton', command=mirror_skel, w=300)
     cmds.button(label='Setup Legs', command=setup_legs, w=300)
@@ -107,6 +111,11 @@ def ui():
     cmds.setParent('..')
     cmds.showWindow(window)
 
+
+def fast_fk_rig(*args):
+    cog_joint = cmds.ls(sl=True)[0]
+    root = sfa.SimpleRig(cog_joint)
+    root.setup_rig()
 
 def populate_connection_menu(*args):
     attrib_list = [
