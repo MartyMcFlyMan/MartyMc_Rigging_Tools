@@ -75,6 +75,7 @@ class SimpleRig:
     def __init__(self, root_joint):
         """Get the root joint name"""
         self.root_joint = root_joint
+        root = JointController(self.root_joint)
 
     def has_children(self, joint):
         """Check if current joint has children"""
@@ -117,14 +118,13 @@ class SimpleRig:
             self.loop_joints(children_list)
 
     def setup_rig(self):
-        root = JointController(self.root_joint)
         root.create_ctl_on_joint()
         root_children = self.get_children(self.root_joint)
         self.loop_joints(root_children)
+
+    def create_groups(self):
         cmds.group(root.get_offset_name(), n='ctl_grp')
         jnt_grp = cmds.group(root.name, n='jnt_grp')
-
-
 
 
 

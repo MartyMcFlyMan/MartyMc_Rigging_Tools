@@ -99,6 +99,7 @@ def ui():
 
     # create mySKEL autorigger buttons
     cmds.button(label='Fast FK rig', command=fast_fk_rig, w=300)
+    cmds.text(label='Select COG only', font='smallBoldLabelFont')
     cmds.separator(h=20)
     cmds.button(label='Create Biped Skeleton', command=create_base_skel.create_skel, w=300)
     cmds.button(label='Mirror skeleton', command=mirror_skel, w=300)
