@@ -5,7 +5,10 @@ Since I started rigging last year, I have wrote a couple of scripts to make the 
 I made a UI that holds all the tools I made and makes them even more easy to use, but also to share.
 
 mySKEL, the third tab of the ToolBox, is my first WIP autorigger. It currently does arms and legs, however many there may be.
-It lacks in versatility for now because it was aimed at a project in particular, but in the future I will rework the code to allow for a more modular approach.  
+It lacks in versatility for now because it was aimed at a project in particular, but in the future I will rework the code to allow for a more modular approach.
+
+There is also a tool to rapidly create controllers and hierarchy on simple FK rigs.
+It can be very useful for props or very basic characters.
 
 
 ## To use:
