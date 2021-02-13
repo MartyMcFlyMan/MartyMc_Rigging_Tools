@@ -283,3 +283,47 @@ def remove_positional(remove, pos, *args):
         cmds.rename(x, new_name)
 
 
+def snap(*args):
+    """Get target info, give to moved object"""
+    moved, target = cmds.ls(sl=True)
+    target_pos = tuple(cmds.xform(target, q=True, t=True))
+    target_rot = tuple(cmds.xform(target, q=True, ro=True))
+    target_scale = tuple(cmds.xform(target, q=True, s=True))
+
+    cmds.xform(moved, t=target_pos)
+    cmds.xform(moved, ro=target_rot)
+    cmds.xform(moved, s=target_scale)
+
+
+def select_skinning_joints(*args):
+    """Select all joints except end joints"""
+    list = cmds.ls(type='joint')
+    cmds.select(d=True)
+    for jnt in list:
+        if not cmds.listRelatives(jnt, c=True):
+            continue
+        cmds.select(jnt, add=True)
+
+
+def give_suffix(source_text, suffix):
+    """Add suffix to object name, return new name"""
+    return source_text + suffix
+
+
+def give_prefix(source_text, prefix):
+    """Add suffix to object name, return new name"""
+    return prefix + source_text
+
+
+def give_prefix_and_suffix(source_text, prefix, suffix):
+    """Add suffix to object name, return new name"""
+    return prefix + source_text + suffix
+
+
+def get_short_name(jnt):
+    """Return short name from absolute name"""
+    full_name_list = jnt.split('|')
+    short_name = full_name_list[-1]
+    return short_name
+
+

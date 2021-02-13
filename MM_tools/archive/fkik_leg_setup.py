@@ -1,6 +1,5 @@
 
 import maya.cmds as cmds
-import sys
 
 import rig_utils
 reload(rig_utils)

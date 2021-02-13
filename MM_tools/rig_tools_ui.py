@@ -1,14 +1,13 @@
 
 from maya import cmds
 import os
-from functools import partial
 import rig_utils
 import create_base_skel
 import fkik_leg_setup
 import reverse_foot
 import lock_ctls
 import fkik_arm_setup
-import simple_fk_autorig as sfa
+import auto_rigger as rigger
 
 reload(rig_utils)
 reload(create_base_skel)
@@ -16,7 +15,7 @@ reload(reverse_foot)
 reload(fkik_leg_setup)
 reload(lock_ctls)
 reload(fkik_arm_setup)
-reload(sfa)
+reload(rigger)
 
 
 def ui():
@@ -115,7 +114,7 @@ def ui():
 
 def fast_fk_rig(*args):
     cog_joint = cmds.ls(sl=True)[0]
-    root = sfa.SimpleRig(cog_joint)
+    root = rigger.SimpleRig(cog_joint)
     root.setup_rig()
 
 def populate_connection_menu(*args):
