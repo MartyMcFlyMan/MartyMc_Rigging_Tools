@@ -3,19 +3,11 @@ from maya import cmds
 import os
 import rig_utils
 import create_base_skel
-import fkik_leg_setup
-import reverse_foot
-import lock_ctls
-import fkik_arm_setup
-import auto_rigger as rigger
+from class_simple_rig import SimpleRig
+from class_fkik_limb import FkikArm, FkikLeg, ReverseFoot
 
 reload(rig_utils)
 reload(create_base_skel)
-reload(reverse_foot)
-reload(fkik_leg_setup)
-reload(lock_ctls)
-reload(fkik_arm_setup)
-reload(rigger)
 
 
 def ui():
@@ -102,8 +94,16 @@ def ui():
     cmds.separator(h=20)
     cmds.button(label='Create Biped Skeleton', command=create_base_skel.create_skel, w=300)
     cmds.button(label='Mirror skeleton', command=mirror_skel, w=300)
-    cmds.button(label='Setup Legs', command=setup_legs, w=300)
-    cmds.button(label='Setup Arms', command=setup_arms, w=300)
+    cmds.separator(h=15)
+    cmds.button(label='Setup Leg', command=rig_leg, w=300)
+    cmds.text(label='Select hip joint', font='smallBoldLabelFont')
+    cmds.separator(h=5)
+    cmds.button(label='Setup Leg and foot', command=rig_leg_foot, w=300)
+    cmds.text(label='Select hip joint', font='smallBoldLabelFont')
+    cmds.separator(h=5)
+    cmds.button(label='Setup Arm', command=rig_arm, w=300)
+    cmds.text(label='Select shoulder joint', font='smallBoldLabelFont')
+    cmds.separator(h=5)
 
     cmds.tabLayout(tabs, edit=True, tabLabel=((tab_child1, 'Rigging Tools'),
                                               (tab_child2, 'Direct Connections'),
@@ -114,7 +114,7 @@ def ui():
 
 def fast_fk_rig(*args):
     cog_joint = cmds.ls(sl=True)[0]
-    root = rigger.SimpleRig(cog_joint)
+    root = SimpleRig(cog_joint)
     root.setup_rig()
 
 def populate_connection_menu(*args):
@@ -149,45 +149,10 @@ def connect_diff(*args):
     rig_utils.connect_different(parent_attr, child_attr)
 
 
-def setup_legs(side, *args):
-    legs_list = detect_legs()
-    print legs_list
-    for leg_parts in legs_list:
-        hip = leg_parts.get('hip_name')
-        knee = leg_parts.get('knee_name')
-        ankle = leg_parts.get('ankle_name')
-
-        if hip is None or knee is None or ankle is None:
-            continue
-        else:
-            fkik_leg_setup.setup_fkik_leg(hip, knee, ankle)
-
 # joint display size update
 def update_size(*args):
     val = cmds.floatSliderGrp('size_slider', q=True, v=True)
     cmds.jointDisplayScale(val, a=True)
-
-
-def list_prefix(*args):
-    """Detect all joint prefixes to pass as side arguments to the autorigger"""
-    # make a list from all joints
-    jnt_list = cmds.ls(type='joint')
-    prefix_list = []
-
-    # loop joints and get prefixes
-    for jnt in jnt_list:
-        split_jnt = jnt.split('_')
-
-        # remove joints without prefixes (ex. chest_jnt)
-        if len(split_jnt) <= 2:
-            continue
-        else:
-            new_prefix = split_jnt[0]
-
-            if new_prefix not in prefix_list:
-                prefix_list.append(new_prefix)
-
-    return prefix_list
 
 
 def detect_parts(*args):
@@ -240,79 +205,28 @@ def mirror_skel(*args):
     cmds.select(d=True)
 
 
-def detect_legs(*args):
-    """Detect hip joints, and find their knee and ankle joint names, creates a list of dicts"""
-    hips_list = detect_parts().get('hips_list')
-    legs_list = []
-    for hip in hips_list:
-        leg_parts = {}
-        knee = cmds.listRelatives(hip, c=True, pa=True)
-        ankle = cmds.listRelatives(knee, c=True, pa=True)
-        leg_parts['hip_name'] = ''.join(hip)
-        leg_parts['knee_name'] = ''.join(knee)
-        leg_parts['ankle_name'] = ''.join(ankle)
-        legs_list.append(leg_parts)
-
-    return legs_list
+def rig_leg_foot(*args):
+    """Pass selection to rig setup function of class ReverseFoot"""
+    sel = cmds.ls(sl=True)
+    for x in sel:
+        x = ReverseFoot(x)
+        x.setup_foot()
 
 
-def detect_arms(*args):
-    """Detect scapula joints, and find their shoulder, elbow and wrist joint names. Creates a list of dicts"""
-    scaps_list = detect_parts().get('scaps_list')
-    arms_list = []
-    for scap in scaps_list:
-        for shoulder in cmds.listRelatives(scap, c=True, pa=True):
-            arm_parts = {}
-            elbow = cmds.listRelatives(shoulder, c=True, pa=True)
-            wrist = cmds.listRelatives(elbow, c=True, pa=True)
-            arm_parts['shoulder_name'] = ''.join(shoulder)
-            arm_parts['elbow_name'] = ''.join(elbow)
-            arm_parts['wrist_name'] = ''.join(wrist)
-            arms_list.append(arm_parts)
-
-    return arms_list
+def rig_leg(*args):
+    """Pass selection to rig setup function of class FkikLeg"""
+    sel = cmds.ls(sl=True)
+    for x in sel:
+        x = FkikLeg(x)
+        x.setup_leg()
 
 
-def setup_arms(*args):
-    arms_list = detect_arms()
-    print arms_list
-    for arm_parts in arms_list:
-        shoulder = arm_parts.get('shoulder_name')
-        elbow = arm_parts.get('elbow_name')
-        wrist = arm_parts.get('wrist_name')
-
-        if shoulder is None or elbow is None or wrist is None:
-            continue
-        else:
-            fkik_arm_setup.setup_fkik_arm(shoulder, elbow, wrist)
-
-
-def detect_feet(*args):
-    """Detect ankle joints, finds their ball, toe and heel joints. Creates a list of dicts"""
-    ankles_list = detect_parts().get('ankles_list')
-    feet_list = []
-    for ankle in ankles_list:
-        arm_parts = {}
-        heel = None
-        ball = None
-        for jnt in cmds.listRelatives(ankle, c=True, pa=True):
-            if 'heel' in jnt:
-                heel = jnt
-            if 'ball' in jnt:
-                ball = jnt
-
-        toe = cmds.listRelatives(ball, c=True, pa=True)
-
-        arm_parts['ankle_name'] = ankle
-        arm_parts['ball_name'] = ball
-        arm_parts['heel_name'] = heel
-        arm_parts['toe_name'] = toe
-        feet_list.append(arm_parts)
-
-    return feet_list
-
-
-
+def rig_arm(*args):
+    """Pass selection to rig setup function of class FkikArm"""
+    sel = cmds.ls(sl=True)
+    for x in sel:
+        x = FkikArm(x)
+        x.setup_arm()
 
 
 

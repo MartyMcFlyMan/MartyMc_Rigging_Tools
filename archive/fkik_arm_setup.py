@@ -2,8 +2,8 @@
 import maya.cmds as cmds
 import sys
 
-import rig_utils
-reload(rig_utils)
+import MM_tools.rig_utils
+reload(MM_tools.rig_utils)
 
 
 def setup_fkik_arm(shoulder=None, elbow=None, wrist=None, *args):
@@ -58,7 +58,7 @@ def setup_fkik_arm(shoulder=None, elbow=None, wrist=None, *args):
     cmds.xform(fkik_loc, cp=True)
     cmds.xform(fkik_loc, s=(0.5, 0.5, 0.5))
 
-    rig_utils.colour_red(fkik_loc)
+    MM_tools.rig_utils.colour_red(fkik_loc)
     cmds.xform(fkik_loc, r=True, t=(switch_offset_x, 0, switch_offset_z))
 
     # create IK hand controllers
@@ -72,7 +72,7 @@ def setup_fkik_arm(shoulder=None, elbow=None, wrist=None, *args):
     cmds.group(n=hand_name + '_IK_offset')
     cmds.xform(hand_name + '_IK_offset', t=wrist_pos, ro=wrist_rot)
 
-    rig_utils.colour_red(hand_name + '_IK_ctl')
+    MM_tools.rig_utils.colour_red(hand_name + '_IK_ctl')
 
     # Duplicate the arm joints twice (for IK and FK)
     cmds.duplicate(shoulder)
@@ -143,9 +143,9 @@ def setup_fkik_arm(shoulder=None, elbow=None, wrist=None, *args):
     cmds.parent(elbow_fk_offset, shoulder_fk_ctl)
 
     # lets colors the new controllers Blue
-    rig_utils.colour_blue(shoulder_fk_ctl)
-    rig_utils.colour_blue(elbow_fk_ctl)
-    rig_utils.colour_blue(wrist_fk_ctl)
+    MM_tools.rig_utils.colour_blue(shoulder_fk_ctl)
+    MM_tools.rig_utils.colour_blue(elbow_fk_ctl)
+    MM_tools.rig_utils.colour_blue(wrist_fk_ctl)
 
     # Now we need to hook up the FKIK switch to the constraints and controllers visibility using driven keys
 
@@ -237,15 +237,15 @@ def setup_fkik_arm(shoulder=None, elbow=None, wrist=None, *args):
     cmds.xform(arm_name + 'PV_offset', ro=(0, 0, 0))
 
     # color the armPV controllers
-    rig_utils.colour_yellow(arm_name + 'PV_ctl')
+    MM_tools.rig_utils.colour_yellow(arm_name + 'PV_ctl')
 
     # create Pole vector constraints
     cmds.poleVectorConstraint(arm_name + 'PV_ctl', arm_name + '_ikHandle')
 
     # hide the FKIK joints (I only hide the top joint so the rest disappears with it)
-    rig_utils.hide(shoulder_fk)
-    rig_utils.hide(shoulder_ik)
-    rig_utils.hide(arm_name + '_ikHandle')
+    MM_tools.rig_utils.hide(shoulder_fk)
+    MM_tools.rig_utils.hide(shoulder_ik)
+    MM_tools.rig_utils.hide(arm_name + '_ikHandle')
 
     # parent ikHandle to ik control
     cmds.parent(arm_name + '_ikHandle', hand_name + '_IK_ctl')

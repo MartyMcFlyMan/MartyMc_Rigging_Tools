@@ -1,8 +1,8 @@
 
 import maya.cmds as cmds
 
-import rig_utils
-reload(rig_utils)
+import MM_tools.rig_utils
+reload(MM_tools.rig_utils)
 
 
 def setup_fkik_leg(hip=None, knee=None, ankle=None, *args):
@@ -55,7 +55,7 @@ def setup_fkik_leg(hip=None, knee=None, ankle=None, *args):
     cmds.xform(fkik_loc, cp=True)
     cmds.xform(fkik_loc, s=(0.5, 0.5, 0.5))
 
-    rig_utils.colour_red(fkik_loc)
+    MM_tools.rig_utils.colour_red(fkik_loc)
     cmds.xform(fkik_loc, r=True, t=(switch_offset_x, 0, switch_offset_z))
 
     # create IK foot controllers
@@ -69,7 +69,7 @@ def setup_fkik_leg(hip=None, knee=None, ankle=None, *args):
     cmds.group(n=foot_name + '_IK_offset')
     cmds.xform(foot_name + '_IK_offset', t=ankle_pos, ro=ankle_rot)
 
-    rig_utils.colour_red(foot_ctl)
+    MM_tools.rig_utils.colour_red(foot_ctl)
 
     # Duplicate the leg joints twice (for IK and FK)
     cmds.duplicate(hip)
@@ -141,9 +141,9 @@ def setup_fkik_leg(hip=None, knee=None, ankle=None, *args):
     cmds.parent(knee_fk_offset, hip_fk_ctl)
 
     # lets colors the new controllers Blue
-    rig_utils.colour_blue(hip_fk_ctl)
-    rig_utils.colour_blue(knee_fk_ctl)
-    rig_utils.colour_blue(ankle_fk_ctl)
+    MM_tools.rig_utils.colour_blue(hip_fk_ctl)
+    MM_tools.rig_utils.colour_blue(knee_fk_ctl)
+    MM_tools.rig_utils.colour_blue(ankle_fk_ctl)
 
     # Now we need to hook up the FKIK switch to the constraints and controllers visibility using driven keys
 
@@ -236,14 +236,14 @@ def setup_fkik_leg(hip=None, knee=None, ankle=None, *args):
     cmds.xform(pv_offset, ro=(0, 0, 0))
 
     # color the legPV controllers
-    rig_utils.colour_yellow(pv_ctl[0])
+    MM_tools.rig_utils.colour_yellow(pv_ctl[0])
 
     # create Pole vector constraints
     cmds.poleVectorConstraint(pv_ctl[0], leg_name + '_ikHandle')
 
     # hide the FKIK joints (I only hide the top joint so the rest disappears with it)
-    rig_utils.hide(hip_ik)
-    rig_utils.hide(hip_fk)
+    MM_tools.rig_utils.hide(hip_ik)
+    MM_tools.rig_utils.hide(hip_fk)
 
     # parent ikhandle under foot ctl
     cmds.parent(leg_name + '_ikHandle', foot_name + '_IK_ctl')

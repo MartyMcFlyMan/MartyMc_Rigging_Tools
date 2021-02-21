@@ -1,7 +1,7 @@
 import maya.cmds as cmds
 
-import rig_utils
-reload(rig_utils)
+import MM_tools.rig_utils
+reload(MM_tools.rig_utils)
 
 
 def create_rfs(side, *args):
@@ -59,7 +59,7 @@ def create_rfs(side, *args):
         ctl_name = cmds.circle(n=side + '_' + part + '_RFS_ctl', ch=False)[0]
         cmds.xform(ctl_name, ro=(0, 90, 0))
         cmds.makeIdentity(ctl_name, a=True, r=True, s=True, t=True)
-        rig_utils.colour_red(ctl_name)
+        MM_tools.rig_utils.colour_red(ctl_name)
 
         # create groups
         grp_name = cmds.group(n=side + '_' + part + '_RFS_offset')
@@ -88,6 +88,6 @@ def create_rfs(side, *args):
     cmds.parent(side + '_ball_RFS_grp', side + '_ball_RFS_ctl')
 
     # hide all the ikHandles
-    rig_utils.hide(side + '_leg_ikHandle')
-    rig_utils.hide(side + '_ball_ikHandle')
-    rig_utils.hide(side + '_toe_ikHandle')
+    MM_tools.rig_utils.hide(side + '_leg_ikHandle')
+    MM_tools.rig_utils.hide(side + '_ball_ikHandle')
+    MM_tools.rig_utils.hide(side + '_toe_ikHandle')

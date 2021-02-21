@@ -1,171 +1,10 @@
 import maya.cmds as cmds
 import rig_utils as utils
 import operator
+from class_joint import Joint
+from class_joint import JointController
+from class_simple_rig import SimpleRig
 reload(utils)
-
-
-class Joint(object):
-    def __init__(self, joint_name):
-        """Initialize joint name, short_name and nice_name variable,
-         which holds the name of the joint without the _jnt suffix"""
-        self.name = joint_name
-        self.short_name = self.name.split('|')[-1]
-        if self.short_name[-4:] == '_jnt':
-            self.nice_name = self.short_name[:-4]
-        else:
-            self.nice_name = self.short_name
-
-    @property
-    def middle_name(self):
-        """Hold the middle part of a name"""
-        return self.short_name.split('_')[1]
-
-    @property
-    def prefix(self):
-        """Hold the prefix part of a name."""
-        return self.short_name.split('_')[0]
-
-    @property
-    def suffix(self):
-        """Hold the prefix part of a name."""
-        return self.short_name.split('_')[-1]
-
-    @property
-    def has_children(self):
-        """Return True if joint has child joint"""
-        return False if cmds.listRelatives(self.name, c=True, type='joint') is None else True
-
-    @property
-    def ctl_name(self):
-        """Hold the name of the control for the current joint"""
-        return self.nice_name + '_ctl'
-
-    @property
-    def offset_name(self):
-        """Hold the name of the offset for the current joint"""
-        return self.nice_name + '_offset'
-
-    @property
-    def ik_name(self):
-        """Hold the name of the control for the current joint"""
-        return self.nice_name + '_ik_jnt'
-
-    @property
-    def constraint_name(self):
-        """Hold the name of the control for the current joint"""
-        return self.short_name + '_parentConstraint1'
-
-    @property
-    def fk_name(self):
-        """Hold the name of the control for the current joint"""
-        return self.nice_name + '_fk_jnt'
-
-    @property
-    def fk_ctl(self):
-        """Hold the name of the control for the current fk joint"""
-        return self.nice_name + '_fk_ctl'
-
-    @property
-    def position(self):
-        """Hold current joint's position as a tuple"""
-        return tuple(cmds.xform(self.name, q=True, t=True, ws=True))
-
-    @property
-    def rotation(self):
-        """Hold current joint's rotation as a tuple"""
-        return tuple(cmds.xform(self.name, q=True, ro=True, ws=True))
-
-    @property
-    def scale(self):
-        """Hold current joint's rotation as a tuple"""
-        return tuple(cmds.xform(self.name, q=True, s=True, ws=True))
-
-    def hide(self):
-        cmds.setAttr(self.name + '.v', 0)
-
-
-class JointController(Joint):
-    """The class contains all the requisite methods to create a controller on a joint,
-    with an offset group"""
-    def __init__(self, joint):
-        """Get the processed joint's name"""
-        super(JointController, self).__init__(joint)
-
-    def create_ctl(self):
-        """Create NURB circle"""
-        cmds.circle(ch=False, n=self.ctl_name)
-        cmds.xform(self.ctl_name, ro=(0, 90, 0))
-        cmds.makeIdentity(self.ctl_name, a=True, t=True, r=True, s=True)
-        utils.colour_blue(self.ctl_name)
-
-    def create_offset(self):
-        """Create offset group on control"""
-        cmds.group(self.ctl_name, n=self.offset_name)
-
-    def place_offset(self):
-        """Move offset group to joint position and orientation"""
-        cmds.xform(self.offset_name, ro=self.rotation, t=self.position, a=True)
-
-    def constraint_ctl(self):
-        cmds.parentConstraint(self.ctl_name, self.name)
-
-    def create_ctl_on_joint(self):
-        """Creates the controller on the joint with its offset group"""
-        self.create_ctl()
-        self.create_offset()
-        self.place_offset()
-        self.constraint_ctl()
-
-
-class SimpleRig:
-    """The class contains all the necessary methods to create a simple FK rig from joints"""
-    def __init__(self, root_joint):
-        """Get the root joint name"""
-        self.root = JointController(root_joint)
-
-    def has_children(self, joint):
-        """Check if current joint has children"""
-        return False if cmds.listRelatives(joint, c=True, type='joint') is None else True
-
-    def get_children(self, joint):
-        """Return a list of the current joint's children"""
-        if self.has_children(joint):
-            return cmds.listRelatives(joint, c=True, type='joint')
-        return []
-
-    def get_parent_ctl(self, joint):
-        parent = JointController(cmds.listRelatives(joint, p=True, type='joint')[0])
-        return parent.ctl_name
-
-    def setup_joint(self, joint):
-        """Create controller and offset on joint. Return offset name"""
-        current_joint = JointController(joint)
-        current_joint.create_ctl_on_joint()
-        return current_joint.offset_name
-
-    def parent_controller(self, joint):
-        """Parent the current joint's offset under its parent joint's control"""
-        current_joint = JointController(joint)
-        parent_ctl = self.get_parent_ctl(joint)
-        child_offset = current_joint.offset_name
-        cmds.parent(child_offset, parent_ctl)
-
-    def loop_joints(self, joint_list):
-        """Setup joint controllers and hierarchy and feeds back joint's children in loop"""
-        for jnt in joint_list:
-            if not self.has_children(jnt):
-                continue
-            self.setup_joint(jnt)
-            self.parent_controller(jnt)
-            children_list = self.get_children(jnt)
-            self.loop_joints(children_list)
-
-    def setup_rig(self):
-        """Create controller on root joint,
-        then loop the whole skeleton and create all controllers"""
-        self.root.create_ctl_on_joint()
-        root_children = self.get_children(self.root.name)
-        self.loop_joints(root_children)
 
 
 class FkikLimb(object):
@@ -340,7 +179,7 @@ class FkikArm(FkikLimb):
     def hide_ikHandles(self):
         utils.hide(self.hand_ik_handle)
 
-    def rig_fkik_arm(self):
+    def setup_arm(self):
         """Execute all commands in order to create the rig"""
         self.create_fkik_switch()
         self.create_ik_foot_ctl()
@@ -468,7 +307,7 @@ class FkikLeg(FkikLimb):
     def hide_ikHandles(self):
         utils.hide(self.foot_ik_handle)
 
-    def rig_fkik_leg(self):
+    def setup_leg(self):
         """Execute all commands in order to create the rig"""
         self.create_fkik_switch()
         self.create_ik_foot_ctl()
@@ -486,4 +325,99 @@ class FkikLeg(FkikLimb):
         self.create_pv()
         self.hide_ikHandles()
 
+
+class ReverseFoot(FkikLeg):
+    """Inherits from class FkikLeg. Contains methods for adding a reverse foot setup to the fkik leg"""
+    def __init__(self, hip_joint, knee_joint=None, ankle_joint=None):
+        """Initialise Joint objects, fkik switch name and position and ik foot controller name"""
+        super(ReverseFoot, self).__init__(hip_joint, knee_joint, ankle_joint)
+        switch_offset_x = self.top_to_mid_dist/2
+        if self.top_joint.position[0] < 0:
+            switch_offset_x = -switch_offset_x
+        self.switch_pos = tuple(map(operator.add, self.top_joint.position, (switch_offset_x, 0, 0)))
+        self.switch_name = self.top_joint.prefix + '_leg_fkikSwitch'
+        self.switch_attr = self.switch_name + '.FKIKSwitch'
+        self.ik_foot_ctl = self.end_joint.nice_name + '_IK_ctl'
+        self.ik_foot_offset = self.end_joint.nice_name + '_IK_offset'
+        self.foot_ik_handle = self.end_joint.nice_name + '_ikHandle'
+
+        self.ankle = JointController(self.end_joint.name, rfs=True)
+        for x in cmds.listRelatives(self.end_joint.name, c=True, type='joint'):
+            x = JointController(x, rfs=True)
+            if x.has_children:
+                self.ball = x
+            else:
+                self.heel = x
+        self.toe = JointController(cmds.listRelatives(self.ball.name, c=True, type='joint')[0], rfs=True)
+        self.top_rfs_group = self.ankle.prefix + '_foot_RFS_grp'
+
+    def create_foot_ik(self):
+        """Create Ik Handles on foot parts and rename effectors. Hide Ik Handles"""
+        ankle_eff = cmds.ikHandle(n=self.ball.ik_handle_name, sj=self.ankle.ik_name,
+                                       ee=self.ball.ik_name, sol='ikSCsolver', s='sticky')
+        cmds.rename(ankle_eff[1], self.ball.effector_name)
+        utils.hide(self.ball.ik_handle_name)
+
+        ball_eff = cmds.ikHandle(n=self.toe.ik_handle_name, sj=self.ball.ik_name,
+                                      ee=self.toe.ik_name, sol='ikSCsolver', s='sticky')
+        cmds.rename(ball_eff[1], self.toe.effector_name)
+        utils.hide(self.toe.ik_handle_name)
+
+    def create_groups(self):
+        """Create reverse foot setup groups and position them on their respective joints."""
+        cmds.group(n=self.heel.rfs_group_name, w=True, em=True)
+        cmds.xform(self.heel.rfs_group_name, t=self.heel.position, ws=True)
+
+        cmds.group(n=self.toe.rfs_group_name, em=True, p=self.heel.rfs_group_name)
+        cmds.xform(self.toe.rfs_group_name, t=self.toe.position, ws=True)
+
+        cmds.group(n=self.ball.rfs_group_name, em=True, p=self.toe.rfs_group_name)
+        cmds.xform(self.ball.rfs_group_name, t=self.ball.position, ws=True)
+
+        cmds.group(n=self.ankle.rfs_group_name, em=True, p=self.ball.rfs_group_name)
+        cmds.xform(self.ankle.rfs_group_name, t=self.ankle.position, ws=True)
+
+        cmds.group(n=self.top_rfs_group, em=True, w=True)
+        cmds.parent(self.heel.rfs_group_name, self.top_rfs_group)
+
+    def create_controls(self):
+        self.heel.create_ctl_on_joint()
+        self.ball.create_ctl_on_joint()
+        self.toe.create_ctl_on_joint()
+
+    def create_hierarchy(self):
+        cmds.parent(self.foot_ik_handle, self.ankle.rfs_group_name)
+        cmds.parent(self.ball.ik_handle_name, self.ball.rfs_group_name)
+        cmds.parent(self.toe.ik_handle_name, self.toe.rfs_group_name)
+
+        cmds.parent(self.top_rfs_group, self.ik_foot_ctl)
+
+        cmds.parent(self.heel.offset_name, self.top_rfs_group)
+        cmds.parent(self.heel.rfs_group_name, self.heel.ctl_name)
+
+        cmds.parent(self.toe.offset_name, self.heel.rfs_group_name)
+        cmds.parent(self.toe.rfs_group_name, self.toe.ctl_name)
+
+        cmds.parent(self.ball.offset_name, self.toe.rfs_group_name)
+        cmds.parent(self.ball.rfs_group_name, self.ball.ctl_name)
+
+    def switch_visibility_foot(self):
+        """Create driven keys linking fkik switch to controllers visibility"""
+        cmds.setDrivenKeyframe(self.heel.ctl_name + '.v', cd=self.switch_attr, dv=0, v=1)
+        cmds.setDrivenKeyframe(self.heel.ctl_name + '.v', cd=self.switch_attr, dv=1, v=0)
+
+        cmds.setDrivenKeyframe(self.ball.ctl_name + '.v', cd=self.switch_attr, dv=0, v=1)
+        cmds.setDrivenKeyframe(self.ball.ctl_name + '.v', cd=self.switch_attr, dv=1, v=0)
+
+        cmds.setDrivenKeyframe(self.toe.ctl_name + '.v', cd=self.switch_attr, dv=0, v=1)
+        cmds.setDrivenKeyframe(self.toe.ctl_name + '.v', cd=self.switch_attr, dv=1, v=0)
+
+    def setup_foot(self, leg=True):
+        if leg:
+            self.setup_leg()
+        self.create_foot_ik()
+        self.create_groups()
+        self.create_controls()
+        self.create_hierarchy()
+        self.switch_visibility_foot()
 
