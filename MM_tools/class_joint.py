@@ -13,7 +13,8 @@ class Joint(object):
         else:
             self.nice_name = self.short_name
 
-        self.middle_name = self.short_name.split('_')[1]
+        if '_' in self.short_name:
+            self.middle_name = self.short_name.split('_')[1]
         self.prefix = self.short_name.split('_')[0]
         self.suffix = self.short_name.split('_')[-1]
         self.has_children = False if cmds.listRelatives(self.name, c=True, type='joint') is None else True

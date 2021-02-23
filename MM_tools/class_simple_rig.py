@@ -45,9 +45,20 @@ class SimpleRig:
             children_list = self.get_children(jnt)
             self.loop_joints(children_list)
 
-    def setup_rig(self):
+    def loop_joints_allow_tips(self, joint_list):
+        """Setup joint controllers and hierarchy and feeds back joint's children in loop"""
+        for jnt in joint_list:
+            self.setup_joint(jnt)
+            self.parent_controller(jnt)
+            children_list = self.get_children(jnt)
+            self.loop_joints_allow_tips(children_list)
+
+    def setup_rig(self, tips=None):
         """Create controller on root joint,
         then loop the whole skeleton and create all controllers"""
         self.root.create_ctl_on_joint()
         root_children = self.get_children(self.root.name)
-        self.loop_joints(root_children)
+        if tips:
+            self.loop_joints_allow_tips(root_children)
+        else:
+            self.loop_joints(root_children)

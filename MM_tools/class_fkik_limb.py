@@ -47,6 +47,12 @@ class FkikLimb(object):
             jnt = Joint(jnt)
             cmds.rename(jnt.name, jnt.nice_name + '_fk_jnt')
 
+    def delete_hand_joints(self):
+        for x in cmds.listRelatives(self.end_joint.ik_name, c=True, type='joint'):
+            cmds.delete(x)
+        for x in cmds.listRelatives(self.end_joint.fk_name, c=True, type='joint'):
+            cmds.delete(x)
+
     def constrain_duplicates(self):
         """Constrain top joint, then loop all children and constrain all who have children (all but tip joints)"""
         cmds.parentConstraint(self.top_joint.ik_name, self.top_joint.name)
@@ -63,7 +69,7 @@ class FkikLimb(object):
     def create_fk_ctls(self):
         """Use the SimpleRig class to create all the fk controllers on the fk joint chain."""
         fk_rig = SimpleRig(self.top_joint.fk_name)
-        fk_rig.setup_rig()
+        fk_rig.setup_rig(tips=True)
 
     def set_preferred_angle(self):
         cmds.joint(self.top_joint.name, e=True, spa=True)
@@ -114,19 +120,25 @@ class FkikArm(FkikLimb):
                                cd=self.switch_attr, dv=0, v=0)
         cmds.setDrivenKeyframe(self.top_joint.constraint_name + '.' + self.top_joint.fk_name + 'W1',
                                cd=self.switch_attr, dv=1, v=1)
-        for jnt in cmds.listRelatives(self.top_joint.name, ad=True, type='joint'):
-            jnt = Joint(jnt)
-            if jnt.has_children:
-                cmds.setDrivenKeyframe(jnt.constraint_name + '.' + jnt.ik_name + 'W0',
-                                       cd=self.switch_attr, dv=0, v=1)
-                cmds.setDrivenKeyframe(jnt.constraint_name + '.' + jnt.ik_name + 'W0',
-                                       cd=self.switch_attr, dv=1, v=0)
-                cmds.setDrivenKeyframe(jnt.constraint_name + '.' + jnt.fk_name + 'W1',
-                                       cd=self.switch_attr, dv=0, v=0)
-                cmds.setDrivenKeyframe(jnt.constraint_name + '.' + jnt.fk_name + 'W1',
-                                       cd=self.switch_attr, dv=1, v=1)
-            else:
-                continue
+
+        cmds.setDrivenKeyframe(self.mid_joint.constraint_name + '.' + self.mid_joint.ik_name + 'W0',
+                               cd=self.switch_attr, dv=0, v=1)
+        cmds.setDrivenKeyframe(self.mid_joint.constraint_name + '.' + self.mid_joint.ik_name + 'W0',
+                               cd=self.switch_attr, dv=1, v=0)
+        cmds.setDrivenKeyframe(self.mid_joint.constraint_name + '.' + self.mid_joint.fk_name + 'W1',
+                               cd=self.switch_attr, dv=0, v=0)
+        cmds.setDrivenKeyframe(self.mid_joint.constraint_name + '.' + self.mid_joint.fk_name + 'W1',
+                               cd=self.switch_attr, dv=1, v=1)
+
+        cmds.setDrivenKeyframe(self.end_joint.constraint_name + '.' + self.end_joint.ik_name + 'W0',
+                               cd=self.switch_attr, dv=0, v=1)
+        cmds.setDrivenKeyframe(self.end_joint.constraint_name + '.' + self.end_joint.ik_name + 'W0',
+                               cd=self.switch_attr, dv=1, v=0)
+        cmds.setDrivenKeyframe(self.end_joint.constraint_name + '.' + self.end_joint.fk_name + 'W1',
+                               cd=self.switch_attr, dv=0, v=0)
+        cmds.setDrivenKeyframe(self.end_joint.constraint_name + '.' + self.end_joint.fk_name + 'W1',
+                               cd=self.switch_attr, dv=1, v=1)
+
 
     def switch_sdk_visibility(self):
         """Create driven keys linking fkik switch to controllers visibility"""
@@ -135,15 +147,12 @@ class FkikArm(FkikLimb):
 
         cmds.setDrivenKeyframe(self.top_joint.fk_ctl + '.v', cd=self.switch_attr, dv=1, v=1)
         cmds.setDrivenKeyframe(self.top_joint.fk_ctl + '.v', cd=self.switch_attr, dv=0, v=0)
-        print self.top_joint.fk_ctl
 
-        for jnt in cmds.listRelatives(self.top_joint.name, ad=True, type='joint'):
-            jnt = Joint(jnt)
-            if jnt.has_children:
-                cmds.setDrivenKeyframe(jnt.fk_ctl + '.v', cd=self.switch_attr, dv=1, v=1)
-                cmds.setDrivenKeyframe(jnt.fk_ctl + '.v', cd=self.switch_attr, dv=0, v=0)
-            else:
-                continue
+        cmds.setDrivenKeyframe(self.mid_joint.fk_ctl + '.v', cd=self.switch_attr, dv=1, v=1)
+        cmds.setDrivenKeyframe(self.mid_joint.fk_ctl + '.v', cd=self.switch_attr, dv=0, v=0)
+
+        cmds.setDrivenKeyframe(self.end_joint.fk_ctl + '.v', cd=self.switch_attr, dv=1, v=1)
+        cmds.setDrivenKeyframe(self.end_joint.fk_ctl + '.v', cd=self.switch_attr, dv=0, v=0)
 
     def create_ik_handle(self):
         """create ik handle for arm"""
@@ -186,6 +195,7 @@ class FkikArm(FkikLimb):
         self.duplicate_limb()
         self.rename_duplicates()
         self.constrain_duplicates()
+        self.delete_hand_joints()
         self.create_fk_ctls()
         self.switch_sdk_constraints()
         self.switch_sdk_visibility()
