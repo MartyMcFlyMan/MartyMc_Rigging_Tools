@@ -91,6 +91,18 @@ class FkikArm(FkikLimb):
         self.ik_hand_ctl = self.end_joint.nice_name + '_IK_ctl'
         self.ik_hand_offset = self.end_joint.nice_name + '_IK_offset'
         self.hand_ik_handle = self.end_joint.nice_name + '_ikHandle'
+        self.hand_group_name = self.end_joint.name.replace('wrist_jnt', 'hand_grp')
+
+    def constrain_duplicates_arm(self):
+        """Constrain top joint, then loop all children and constrain all who have children (all but tip joints)"""
+        cmds.parentConstraint(self.top_joint.ik_name, self.top_joint.name)
+        cmds.parentConstraint(self.top_joint.fk_name, self.top_joint.name)
+
+        cmds.parentConstraint(self.mid_joint.ik_name, self.mid_joint.name)
+        cmds.parentConstraint(self.mid_joint.fk_name, self.mid_joint.name)
+
+        cmds.parentConstraint(self.end_joint.ik_name, self.end_joint.name)
+        cmds.parentConstraint(self.end_joint.fk_name, self.end_joint.name)
 
     def create_fkik_switch(self):
         """Create arm fkik switch. Create its switch attribute."""
@@ -188,13 +200,28 @@ class FkikArm(FkikLimb):
     def hide_ikHandles(self):
         utils.hide(self.hand_ik_handle)
 
+    def create_hand_controls(self):
+        """Create empty hand group with correct name. Place it on wrist joint.
+        Then create all finger controls and place finger root control offsets in the empty hand group"""
+        cmds.group(em=True, n=self.hand_group_name, w=True)
+        cmds.xform(self.hand_group_name, t=self.end_joint.position)
+        for x in cmds.listRelatives(self.end_joint.name, type='joint'):
+            fk_rig = SimpleRig(x)
+            base_ctl_offset = fk_rig.setup_rig()
+            print base_ctl_offset
+            cmds.parent(base_ctl_offset, self.hand_group_name)
+
+    def constraint_hand_grp(self):
+        cmds.pointConstraint(self.end_joint.name, self.hand_group_name, mo=True)
+        cmds.orientConstraint(self.end_joint.name, self.hand_group_name, mo=True)
+
     def setup_arm(self):
         """Execute all commands in order to create the rig"""
         self.create_fkik_switch()
         self.create_ik_foot_ctl()
         self.duplicate_limb()
         self.rename_duplicates()
-        self.constrain_duplicates()
+        self.constrain_duplicates_arm()
         self.delete_hand_joints()
         self.create_fk_ctls()
         self.switch_sdk_constraints()
@@ -206,6 +233,14 @@ class FkikArm(FkikLimb):
         self.parent_ikhandle()
         self.create_pv()
         self.hide_ikHandles()
+
+        self.create_hand_controls()
+        self.constraint_hand_grp()
+
+    def setup_hand(self):
+        """Execute all commands in order to create the rig"""
+        self.create_hand_controls()
+        self.constraint_hand_grp()
 
 
 class FkikLeg(FkikLimb):
@@ -313,9 +348,11 @@ class FkikLeg(FkikLimb):
 
         utils.colour_yellow(self.pv_ctl)
         cmds.xform(self.pv_offset, ro=(0, 0, 0))
+        cmds.parent(self.pv_ctl, self.ik_foot_ctl)
 
     def hide_ikHandles(self):
         utils.hide(self.foot_ik_handle)
+
 
     def setup_leg(self):
         """Execute all commands in order to create the rig"""
