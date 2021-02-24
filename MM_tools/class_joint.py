@@ -1,6 +1,8 @@
 import maya.cmds as cmds
 import rig_utils as utils
 
+reload(utils)
+
 
 class Joint(object):
     def __init__(self, joint_name):
@@ -34,6 +36,24 @@ class Joint(object):
     def hide(self):
         cmds.setAttr(self.name + '.v', 0)
 
+    def scale_multiplier(self):
+        """Get distance between joint and child joint to find scale multiplier.
+        If joint has no children, use distance from parent"""
+        if self.has_children:
+            child_joint = cmds.listRelatives(self.name, c=True, type='joint')[0]
+            child = JointController(child_joint)
+            jnt_x, jnt_y, jnt_z = self.position
+            child_x, child_y, child_z = child.position
+            multiplier = ((jnt_x - child_x) ** 2 + (jnt_y - child_y) ** 2 + (jnt_z - child_z) ** 2) ** 0.5
+            return abs(float("{:.2f}".format(multiplier)))
+        else:
+            parent_joint = cmds.listRelatives(self.name, p=True, type='joint')[0]
+            parent = JointController(parent_joint)
+            jnt_x, jnt_y, jnt_z = self.position
+            parent_x, parent_y, parent_z = parent.position
+            multiplier = ((jnt_x - parent_x) ** 2 + (jnt_y - parent_y) ** 2 + (jnt_z - parent_z) ** 2) ** 0.5
+            return abs(float("{:.2f}".format(multiplier)))
+
 
 class JointController(Joint):
     """The class contains all the requisite methods to create a controller on a joint,
@@ -48,10 +68,13 @@ class JointController(Joint):
 
     def create_ctl(self, name=None):
         """Create NURB circle"""
+        scale = 1 * self.scale_multiplier()
         cmds.circle(ch=False, n=self.ctl_name)
         cmds.xform(self.ctl_name, ro=(0, 90, 0))
+        cmds.xform(self.ctl_name, s=(scale, scale, scale))
         cmds.makeIdentity(self.ctl_name, a=True, t=True, r=True, s=True)
         utils.colour_blue(self.ctl_name)
+        return self.ctl_name
 
     def create_offset(self):
         """Create offset group on control"""
@@ -71,3 +94,4 @@ class JointController(Joint):
         self.place_offset()
         if not self.rfs:
             self.constraint_ctl()
+        return self.ctl_name

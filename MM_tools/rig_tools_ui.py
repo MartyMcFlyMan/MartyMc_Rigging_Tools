@@ -3,11 +3,15 @@ from maya import cmds
 import os
 import rig_utils
 import create_base_skel
-from class_simple_rig import SimpleRig
-from class_fkik_limb import FkikArm, FkikLeg, ReverseFoot
+#from class_simple_rig import SimpleRig
+import class_simple_rig as csr
+#from class_fkik_limb import FkikArm, FkikLeg, ReverseFoot
+import class_fkik_limb as cfl
 
 reload(rig_utils)
+reload(csr)
 reload(create_base_skel)
+reload(cfl)
 
 
 def ui():
@@ -114,7 +118,7 @@ def ui():
 
 def fast_fk_rig(*args):
     cog_joint = cmds.ls(sl=True)[0]
-    root = SimpleRig(cog_joint)
+    root = csr.SimpleRig(cog_joint)
     root.setup_rig()
 
 def populate_connection_menu(*args):
@@ -209,7 +213,7 @@ def rig_leg_foot(*args):
     """Pass selection to rig setup function of class ReverseFoot"""
     sel = cmds.ls(sl=True)
     for x in sel:
-        x = ReverseFoot(x)
+        x = cfl.ReverseFoot(x)
         x.setup_foot()
 
 
@@ -217,7 +221,7 @@ def rig_leg(*args):
     """Pass selection to rig setup function of class FkikLeg"""
     sel = cmds.ls(sl=True)
     for x in sel:
-        x = FkikLeg(x)
+        x = cfl.FkikLeg(x)
         x.setup_leg()
 
 
@@ -225,7 +229,7 @@ def rig_arm(*args):
     """Pass selection to rig setup function of class FkikArm"""
     sel = cmds.ls(sl=True)
     for x in sel:
-        x = FkikArm(x)
+        x = cfl.FkikArm(x)
         x.setup_arm()
 
 
