@@ -51,7 +51,7 @@ def create_skel(*args):
 
     # create right arm joints
     cmds.select('chest_jnt')
-    cmds.joint(n='R_scapula_jnt', p=(-0.4, 14.2, 0.3))
+    cmds.joint(n='R_clavicle_jnt', p=(-0.4, 14.2, 0.3))
     cmds.joint(n='R_shoulder_jnt', p=(-1.5, 14.2, 0.3))
     cmds.joint(n='R_elbow_jnt', p=(-4.1, 14.2, 0.1))
     # cmds.joint(n='R_wristTwist_jnt', p=(-5.4, 14.2, 0.2))
@@ -64,7 +64,7 @@ def create_skel(*args):
     cmds.joint(n='R_middleFinger4_jnt', p=(-8.1, 14.2, 0.25))
 
     # orient right arm joints
-    cmds.joint('R_scapula_jnt', e=True, oj='xyz', sao='zdown')
+    cmds.joint('R_clavicle_jnt', e=True, oj='xyz', sao='zdown')
     cmds.joint('R_shoulder_jnt', e=True, oj='xyz', sao='zdown')
     cmds.joint('R_elbow_jnt', e=True, oj='xyz', sao='zdown')
     # cmds.joint('R_wristTwist_jnt', e=True, oj='xyz', sao='zdown')
@@ -143,7 +143,7 @@ def orient_skel(side, *args):
     cmds.joint(side + '_eye_jnt', e=True, oj='xyz', sao='yup')
 
     # orient right arm joints
-    cmds.joint(side + '_scapula_jnt', e=True, oj='xyz', sao='zdown')
+    cmds.joint(side + '_clavicle_jnt', e=True, oj='xyz', sao='zdown')
     cmds.joint(side + '_shoulder_jnt', e=True, oj='xyz', sao='zdown')
     cmds.joint(side + '_elbow_jnt', e=True, oj='xyz', sao='zdown')
     # cmds.joint(side + '_wristTwist_jnt', e=True, oj='xyz', sao='zdown')

@@ -257,8 +257,6 @@ class FkikLeg(FkikLimb):
         self.ik_foot_offset = self.end_joint.nice_name + '_IK_offset'
         self.foot_ik_handle = self.end_joint.nice_name + '_ikHandle'
 
-
-
     def create_fkik_switch(self):
         """Create the fkik switch, color it red, center its pivot, scale it using the top to mid distance value"""
         cmds.spaceLocator(n=self.switch_name, p=self.switch_pos, a=True)
@@ -336,19 +334,20 @@ class FkikLeg(FkikLimb):
         cmds.circle(n=self.pv_ctl, d=1, s=3, ch=False)
         cmds.xform(self.pv_ctl, s=tuple([x*self.top_to_mid_dist for x in (0.1, 0.1, 0.1)]))
         cmds.makeIdentity(self.pv_ctl, a=True, t=True, r=True, s=True)
+        cmds.xform(self.pv_ctl, t=self.mid_joint.position, ro=self.mid_joint.rotation)
+        cmds.xform(self.pv_ctl, t=(0, self.top_to_mid_dist, 0), r=True, os=True)
+
+        leg_pv_pos = cmds.xform(self.pv_ctl, t=True, q=True)
+        if leg_pv_pos[2] < 0:
+            cmds.xform(self.pv_ctl, t=(0, -2*self.top_to_mid_dist, 0), r=True, os=True)
+        cmds.poleVectorConstraint(self.pv_ctl, self.foot_ik_handle)
 
         cmds.group(n=self.pv_offset)
-        cmds.xform(self.pv_offset, t=self.mid_joint.position, ro=self.mid_joint.rotation)
-        cmds.xform(self.pv_offset, t=(0, self.top_to_mid_dist, 0), r=True, os=True)
-
-        leg_pv_pos = cmds.xform(self.pv_offset, t=True, q=True)
-        if leg_pv_pos[2] < 0:
-            cmds.xform(self.pv_offset, t=(0, -2*self.top_to_mid_dist, 0), r=True, os=True)
-        cmds.poleVectorConstraint(self.pv_ctl, self.foot_ik_handle)
+        cmds.makeIdentity(self.pv_ctl, a=True, t=True, r=True, s=True)
 
         utils.colour_yellow(self.pv_ctl)
         cmds.xform(self.pv_offset, ro=(0, 0, 0))
-        cmds.parent(self.pv_ctl, self.ik_foot_ctl)
+        cmds.parent(self.pv_offset, self.ik_foot_ctl)
 
     def hide_ikHandles(self):
         utils.hide(self.foot_ik_handle)

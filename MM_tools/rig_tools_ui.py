@@ -53,7 +53,7 @@ def ui():
     cmds.button(label='Hide Local Rotation Axes', command=rig_utils.hide_local_axis, w=300)
     cmds.separator(h=15)
     cmds.floatSliderGrp('size_slider', label='Joint Display Size', field=True, v=1.0,
-                        minValue=0.1, maxValue=10.0, cw3=(100, 40, 150))
+                        minValue=0.01, maxValue=10.0, cw3=(100, 40, 150), pre=2)
     cmds.floatSliderGrp('size_slider', e=True, dc=update_size)
     cmds.setParent('..')
 
@@ -107,6 +107,9 @@ def ui():
     cmds.separator(h=5)
     cmds.button(label='Setup Arm', command=rig_arm, w=300)
     cmds.text(label='Select shoulder joint', font='smallBoldLabelFont')
+    cmds.separator(h=5)
+
+    cmds.button(label='Select skinning joints', command=select_skinning_joints, w=300)
     cmds.separator(h=5)
 
     cmds.tabLayout(tabs, edit=True, tabLabel=((tab_child1, 'Rigging Tools'),
@@ -233,5 +236,9 @@ def rig_arm(*args):
         x.setup_arm()
 
 
-
-
+def select_skinning_joints(*args):
+    sel = cmds.ls(type='joint')
+    for x in sel:
+        if 'tip' not in x and 'toe' not in x and 'heel' not in x \
+                and 'fk' not in x and 'ik' not in x and 'Finger4' not in x:
+            cmds.select(x, add=True)

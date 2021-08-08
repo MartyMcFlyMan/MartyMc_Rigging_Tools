@@ -284,15 +284,10 @@ def remove_positional(remove, pos, *args):
 
 
 def snap(*args):
-    """Get target info, give to moved object"""
+    """Get target position, give to moved object"""
     moved, target = cmds.ls(sl=True)
-    target_pos = tuple(cmds.xform(target, q=True, t=True))
-    target_rot = tuple(cmds.xform(target, q=True, ro=True))
-    target_scale = tuple(cmds.xform(target, q=True, s=True))
-
-    cmds.xform(moved, t=target_pos)
-    cmds.xform(moved, ro=target_rot)
-    cmds.xform(moved, s=target_scale)
+    target_pos = tuple(cmds.xform(target, q=True, t=True, ws=True))
+    cmds.xform(moved, t=target_pos, ws=True)
 
 
 def select_skinning_joints(*args):
@@ -326,4 +321,13 @@ def get_short_name(jnt):
     short_name = full_name_list[-1]
     return short_name
 
+
+def create_offset_grps():
+    """Create offset groups on all selected objects."""
+    sel = cmds.ls(sl=True)
+    for x in sel:
+        grp_name = cmds.group(em=True, n=x + '_offset', p = 'Clusters_Grp')
+        parent_cst = cmds.parentConstraint(x, grp_name, mo=False)
+        cmds.delete(parent_cst)
+        cmds.parent(x, grp_name)
 
