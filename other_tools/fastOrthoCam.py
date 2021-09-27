@@ -12,7 +12,7 @@ else:
 
     newRX = 90 * round((camRX % 360)/90)
     newRY = 90 * round((camRY % 360)/90)
-f
+
     cmds.xform('persp', ro=(newRX, newRY, camRZ))
 
     cmds.setAttr('persp' + '.orthographic', 1)
