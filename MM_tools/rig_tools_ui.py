@@ -166,18 +166,18 @@ def detect_parts(*args):
 
     parts_dict = {}
     ankles_list = []
-    scaps_list = []
+    clavs_list = []
     hips_list = []
 
     joints_list = cmds.ls(type='joint')
 
-    # detect scapulas and hips for mirroring
+    # detect clavicles and hips for mirroring
     for long_name in joints_list:
         name_list = long_name.split('|')
         short_name = name_list[-1]
 
-        if 'scapula' in short_name:
-            scaps_list.append(long_name)
+        if 'clavicle' in short_name:
+            clavs_list.append(long_name)
 
         if 'hip' in short_name:
             hips_list.append(long_name)
@@ -186,7 +186,7 @@ def detect_parts(*args):
             ankles_list.append(long_name)
 
     parts_dict['ankles_list'] = ankles_list
-    parts_dict['scaps_list'] = scaps_list
+    parts_dict['clavs_list'] = clavs_list
     parts_dict['hips_list'] = hips_list
 
     return parts_dict
@@ -194,17 +194,17 @@ def detect_parts(*args):
 
 def mirror_skel(*args):
     hips_list = detect_parts().get('hips_list')
-    scap_list = detect_parts().get('scaps_list')
+    clav_list = detect_parts().get('clavs_list')
 
     if hips_list:
         for hip in hips_list:
             # mirror right leg joints
             cmds.mirrorJoint(hip, mirrorYZ=True, sr=('R', 'L'), mb=True)
 
-    if scap_list:
-        for scap in scap_list:
-            # mirror right scapula
-            cmds.mirrorJoint(scap, mirrorYZ=True, sr=('R', 'L'), mb=True)
+    if clav_list:
+        for clav in clav_list:
+            # mirror right clavicle
+            cmds.mirrorJoint(clav, mirrorYZ=True, sr=('R', 'L'), mb=True)
 
     # mirror right eye joints
     cmds.mirrorJoint('R_eye_jnt', mirrorYZ=True, sr=('R', 'L'), mb=True)
