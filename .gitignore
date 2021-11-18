@@ -2,3 +2,9 @@
 *.pyc
 .MM_tools/archive/
 .MM_tools/sandbox/
+MM_tools/sandbox/__init__.py
+MM_tools/sandbox/animCurve_queryier_wip.py
+MM_tools/sandbox/animCurve_tester.py
+MM_tools/sandbox/class_AnimCurve.py
+MM_tools/sandbox/locator_to_face_api.py
+MM_tools/sandbox/maya_api_tutorial.py
