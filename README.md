@@ -18,12 +18,6 @@ It can be very useful for props or very basic characters.
 *Other Tools*:
 This folder will contain tools for stuff other than rigging.
 
-It currently contains a tool I wrote that selects random vertices from an object or from a selection of points.
-I wrote this tool for a team project where we needed to rapidly create many realistic props that often required
-to have their surfaces broken. I made a UI for the tool that allowed my team members to use it easily.
-
-
-
 
 ## Installing MM_Tools:
 
