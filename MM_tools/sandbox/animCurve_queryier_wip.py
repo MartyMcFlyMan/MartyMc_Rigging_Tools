@@ -1,5 +1,4 @@
 # AnimCurve Queryier
-
 import maya.cmds as cmds
 
 # get selected object name
@@ -17,6 +16,10 @@ print 'Keyed attribute:', keyed_attribute
 # get time value of selected keys
 key_time = cmds.keyframe(sl=True, q=True)
 print 'Key time:', key_time
+
+# get time value of all keys
+all_time = cmds.keyframe(keyed_attribute, q=True)
+print 'All key times:', all_time
 
 # get value of selected keys
 key_values = cmds.keyframe(sl=True, q=True, vc=True)
@@ -44,6 +47,7 @@ last_key_index = total_keys - 1
 print 'Last key index:', last_key_index
 
 # select key from its index
+
 # index is a range, 0, 0 means from 0 to 0 so only the first key
 # you need the relative flag because otherwise it will try to move the key by 0
 # and since the absolute flag is deafult it will set the key at time 0
@@ -64,3 +68,7 @@ def create_key_value_dict():
         print "the amount of keys and values do not match"
 
 create_key_value_dict()
+
+
+
+
